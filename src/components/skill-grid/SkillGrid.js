@@ -11,15 +11,22 @@ import TextField from "@mui/material/TextField";
 import CloseIcon from "@mui/icons-material/Close";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { useForm, Controller } from "react-hook-form";
-import { Autocomplete } from "@mui/material";
+import { Autocomplete, debounce } from "@mui/material";
+import { Edit } from "@mui/icons-material";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const SkillGrid = () => {
-  const [tableData, setTableData] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [skillOptions, setSkillOption] = useState([]);
+  const [skilldata, setSkillData] = useState({
+    tableData: [],
+    open: false,
+    error: false,
+    inputskill: {} || '',
+    skillOptions: [],
+    submitBtnDisable: false,
+  });
   const {
     control,
-    handleSubmit,
     formState: { errors },
     reset,
   } = useForm({
@@ -30,8 +37,8 @@ const SkillGrid = () => {
 
   const columns = useMemo(() => [
     {
-      accessorKey: "skillId",
-      header: "Skill Id",
+      accessorKey: "serialNumber",
+      header: "S.No",
       muiTableHeadCellProps: {
         align: "center",
       },
@@ -51,30 +58,61 @@ const SkillGrid = () => {
     },
   ]);
 
-  const handleClickOpen = () => {
-    setSkillOption([]);
-    setOpen(true);
+  const handleClickOpen = (type, row) => {
+    if (type == "skill") {
+      setSkillData((prev) => ({
+        ...prev,
+        skillOptions: [],
+        inputskill: { skillId: 0, skillName: "", serialNumber: 0 },
+        open: true,
+      }));
+    } else if (type == "edit" && row) {
+      setSkillData((prev) => ({
+        ...prev,
+        skillOptions: [],
+        inputskill: row["original"],
+        open: true,
+        submitBtnDisable: false,
+      }));
+    } else if (type == "view") {
+      setSkillData((prev) => ({
+        ...prev,
+        inputskill: row["original"],
+        open: true,
+        submitBtnDisable: true,
+      }));
+    }
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setSkillData((prev) => ({ ...prev, open: false, error: false,submitBtnDisable:false }));
     reset();
   };
 
-  const onSubmit = async (data) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     let isPresent = false;
-    tableData.map((skill) => {
-      if (skill.skillName.toLowerCase() === data.skillName.toLowerCase()) {
+    debugger;
+    return;
+    if (Object.keys(skilldata.inputskill).length > 0 ? skilldata.inputskill?.skillName : skilldata.inputskill) {
+      setSkillData((prev) => ({ ...prev, open: false, error: false }));
+    } else {
+      setSkillData((prev) => ({ ...prev, error: false }));
+      return;
+    }
+    let skillname = Object.keys(skilldata.inputskill).length > 0 ? skilldata.inputskill?.skillName:skilldata?.inputskill;
+    skilldata.tableData.map((skill) => {
+      if (skill?.skillName?.toLowerCase() === skillname.toLowerCase()) {
         isPresent = true;
         return;
       }
     });
-
     if (isPresent) {
       alert("Skill Already Present!!!");
       return;
     }
-    data = [data.skillName.trim()];
+    let data = [{skillId:skilldata?.inputskill?.skillId,skillName:skillname.trim()}];
+
     await fetch("/api/skill", {
       method: "POST",
       body: JSON.stringify(data),
@@ -95,58 +133,76 @@ const SkillGrid = () => {
     setTimeout(async () => {
       await fetch(`/api/skill/search?skill=${e}`)
         .then((resp) => resp.json())
-        .then((resp) => setSkillOption(resp));
+        .then((resp) =>
+          setSkillData((prev) => ({ ...prev, skillOptions: resp }))
+        );
     }, 500);
   };
 
   const getSkills = async () => {
     await fetch("/api/skill")
       .then((resp) => resp.json())
-      .then((resp) => setTableData(resp));
+      .then((resp) =>
+        setSkillData((prev) => ({
+          ...prev,
+          tableData: resp.map((result, index) => {
+            result["serialNumber"] = index + 1;
+            return result;
+          }),
+        }))
+      );
   };
   return (
     <>
       <Dialog
-        open={open}
+        open={skilldata.open}
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
           {"Add Skill"}
-          <span style={{ marginLeft: "310px" }}>
+          <span style={{ marginLeft: "270px" }}>
             <CloseIcon
               onClick={handleClose}
               style={{ cursor: "pointer", color: "red" }}
             />
           </span>
         </DialogTitle>
-        <DialogContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent maxwidth="sm">
+          <form onSubmit={handleSubmit}>
             <Grid2 container spacing={2}>
               <Grid2 item xs={8}>
                 <Controller
                   control={control}
                   name="skillName"
-                  rules={{ required: "Skill Required" }}
                   render={({ field }) => (
                     <Autocomplete
                       freeSolo
-                      options={skillOptions?.map((data) => data.skillName)}
+                      disabled={skilldata.submitBtnDisable}
+                      value={skilldata.inputskill || null}
+                      options={skilldata.skillOptions?.map(
+                        (data) => data.skillName
+                      )}
+                      getOptionLabel={(option) => option.skillName}
                       onInputChange={(e) => {
-                        if (e.target.value === "") setSkillOption([]);
-                        else setSkills(e.target.value);
+                        if(e?.target.value)
+                        {
+                          setSkills(e?.target.value);
+                          setSkillData((prev) => ({ ...prev,inputskill:{skillId:skilldata.inputskill?.skillId,skillName:e?.target.value}}))
+                        }
                       }}
                       renderInput={(params) => (
                         <TextField
                           id="skillName"
-                          label="Skill Name*"
-                          variant="standard"
+                          disabled={skilldata.submitBtnDisable}
+                          autoComplete="off"
+                          label="Skill Name"
+                          variant="outlined"
                           margin="normal"
                           {...params}
                           {...field}
-                          error={Boolean(errors?.skillName)}
-                          helperText={errors?.skillName?.message}
+                          error={skilldata.error}
                           fullWidth
                         />
                       )}
@@ -154,39 +210,68 @@ const SkillGrid = () => {
                   )}
                 />
               </Grid2>
+              <DialogActions>
+                {skilldata.submitBtnDisable ? (
+                  ""
+                ) : (
+                  <Button color="primary" variant="contained" type="submit">
+                    {skilldata.inputskill?.skillId!==0 ? 'edit': 'add'}
+                  </Button>
+                )}
+              </DialogActions>
             </Grid2>
-            <DialogActions>
-              <Button color="primary" variant="contained" type="submit">
-                Add Skill
-              </Button>
-            </DialogActions>
           </form>
         </DialogContent>
       </Dialog>
-      <Grid sx={{ m: 0, p: 2 }} align="right">
-        <Button
-          className="btn-add"
-          variant="contained"
-          color="success"
-          onClick={handleClickOpen}
-        >
-          <AddCircleOutlineIcon /> &nbsp; Add Skill
-        </Button>
-      </Grid>
+      {skilldata.submitBtnDisable ? (
+        ""
+      ) : (
+        <Grid sx={{ m: 0, p: 2 }} align="right">
+          <Button
+            className="btn-add"
+            variant="contained"
+            color="success"
+            onClick={() => handleClickOpen("skill")}
+          >
+            <AddCircleOutlineIcon /> &nbsp; Add Skill
+          </Button>
+        </Grid>
+      )}
       <MaterialReactTable
-        displayColumnDefOptions={{
-          "mrt-row-actions": {
-            muiTableHeadCellProps: {
-              align: "center",
-            },
-            size: 120,
-          },
-        }}
         columns={columns}
         initialState={{ density: "compact" }}
         enableColumnFilters={false}
-        data={tableData}
+        data={skilldata.tableData}
+        enableEditing
         enableRowVirtualization
+        displayColumnDefOptions={{
+          "mrt-row-actions": {
+            muiTableHeadCellProps: {
+              align: "left",
+            },
+            muiTableBodyCellProps: {
+              align: "center",
+            },
+          },
+        }}
+        positionActionsColumn="last"
+        renderRowActions={({ row, table }) => (
+          <Box sx={{ display: "flex", gap: "0.5rem" }}>
+            <Tooltip arrow placement="left" title="Edit">
+              <IconButton onClick={() => handleClickOpen("edit", row)}>
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow placement="right" title="View">
+              <IconButton
+                color="success"
+                onClick={() => handleClickOpen("view", row)}
+              >
+                <VisibilityIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
       />
     </>
   );
