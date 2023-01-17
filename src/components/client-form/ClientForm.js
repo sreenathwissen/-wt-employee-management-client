@@ -94,7 +94,7 @@ useEffect(()=>{
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description">
                 <DialogTitle id="alert-dialog-title">
-                {disableBtn ? "View Client Details" : rowUpdate? "Edit Client Details":"Enter The New Client Details"}
+                {disableBtn ? "View Client" : rowUpdate? "Edit Client":"Add Client"}
                 </DialogTitle>
                 <DialogContent>
                     <Container maxWidth="sm">
@@ -154,7 +154,7 @@ useEffect(()=>{
                     </Container>
                 </DialogContent>
                 <DialogActions>
-                 {disableBtn ? '':<Button variant="contained" color="success" onClick={saveClient}>{rowUpdate ? 'edit': 'add'}</Button>}
+                 {disableBtn ? '':<Button variant="contained" color="success" onClick={saveClient}>{rowUpdate ? 'Edit': 'Add'}</Button>}
                     <Button variant="outlined" onClick={onClose}>close</Button>
                 </DialogActions>
             </Dialog>

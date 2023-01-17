@@ -21,7 +21,8 @@ const SkillGrid = () => {
     tableData: [],
     open: false,
     error: false,
-    inputskill: {} || '',
+    editEnable: false,
+    inputskill: {} || "",
     skillOptions: [],
     submitBtnDisable: false,
   });
@@ -65,11 +66,13 @@ const SkillGrid = () => {
         skillOptions: [],
         inputskill: { skillId: 0, skillName: "", serialNumber: 0 },
         open: true,
+        editEnable: false,
       }));
     } else if (type == "edit" && row) {
       setSkillData((prev) => ({
         ...prev,
         skillOptions: [],
+        editEnable: true,
         inputskill: row["original"],
         open: true,
         submitBtnDisable: false,
@@ -85,22 +88,32 @@ const SkillGrid = () => {
   };
 
   const handleClose = () => {
-    setSkillData((prev) => ({ ...prev, open: false, error: false,submitBtnDisable:false }));
+    setSkillData((prev) => ({
+      ...prev,
+      open: false,
+      error: false,
+      submitBtnDisable: false,
+    }));
     reset();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     let isPresent = false;
-    debugger;
-    return;
-    if (Object.keys(skilldata.inputskill).length > 0 ? skilldata.inputskill?.skillName : skilldata.inputskill) {
+    if (
+      Object.keys(skilldata.inputskill).length > 0
+        ? skilldata.inputskill?.skillName
+        : skilldata.inputskill
+    ) {
       setSkillData((prev) => ({ ...prev, open: false, error: false }));
     } else {
-      setSkillData((prev) => ({ ...prev, error: false }));
+      setSkillData((prev) => ({ ...prev, error: true }));
       return;
     }
-    let skillname = Object.keys(skilldata.inputskill).length > 0 ? skilldata.inputskill?.skillName:skilldata?.inputskill;
+    let skillname =
+      Object.keys(skilldata.inputskill).length > 0
+        ? skilldata.inputskill?.skillName
+        : skilldata?.inputskill;
     skilldata.tableData.map((skill) => {
       if (skill?.skillName?.toLowerCase() === skillname.toLowerCase()) {
         isPresent = true;
@@ -111,8 +124,9 @@ const SkillGrid = () => {
       alert("Skill Already Present!!!");
       return;
     }
-    let data = [{skillId:skilldata?.inputskill?.skillId,skillName:skillname.trim()}];
-
+    let data = [
+      { skillId: skilldata?.inputskill?.skillId, skillName: skillname.trim() },
+    ];
     await fetch("/api/skill", {
       method: "POST",
       body: JSON.stringify(data),
@@ -160,16 +174,21 @@ const SkillGrid = () => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          {"Add Skill"}
-          <span style={{ marginLeft: "270px" }}>
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{
+            padding: "5px 24px",
+          }}
+        >
+          {skilldata?.submitBtnDisable ? "View Skill" : skilldata?.editEnable? "Edit Skill": "Add Skill"}
+          <span style={{ marginLeft: "250px" }}>
             <CloseIcon
               onClick={handleClose}
               style={{ cursor: "pointer", color: "red" }}
             />
           </span>
         </DialogTitle>
-        <DialogContent maxwidth="sm">
+        <DialogContent maxwidth="400px">
           <form onSubmit={handleSubmit}>
             <Grid2 container spacing={2}>
               <Grid2 item xs={8}>
@@ -181,16 +200,19 @@ const SkillGrid = () => {
                       freeSolo
                       disabled={skilldata.submitBtnDisable}
                       value={skilldata.inputskill || null}
-                      options={skilldata.skillOptions?.map(
-                        (data) => data.skillName
-                      )}
+                      options={skilldata.skillOptions?.map((data) => data)}
                       getOptionLabel={(option) => option.skillName}
                       onInputChange={(e) => {
-                        if(e?.target.value)
-                        {
-                          setSkills(e?.target.value);
-                          setSkillData((prev) => ({ ...prev,inputskill:{skillId:skilldata.inputskill?.skillId,skillName:e?.target.value}}))
-                        }
+                        setSkills(e?.target.value);
+                        setSkillData((prev) => ({
+                          ...prev,
+                          inputskill: {
+                            skillId: skilldata.inputskill?.skillId,
+                            skillName:
+                              e?.target.value ??
+                              skilldata.inputskill?.skillName,
+                          },
+                        }));
                       }}
                       renderInput={(params) => (
                         <TextField
@@ -215,7 +237,7 @@ const SkillGrid = () => {
                   ""
                 ) : (
                   <Button color="primary" variant="contained" type="submit">
-                    {skilldata.inputskill?.skillId!==0 ? 'edit': 'add'}
+                    {skilldata.inputskill?.skillId !== 0 ? "Edit" : "Add"}
                   </Button>
                 )}
               </DialogActions>

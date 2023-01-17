@@ -18,11 +18,6 @@ import { Row, Col, Container } from "react-bootstrap";
 import { useEffect } from "react";
 
 const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
-    // const [projectdata,setProjectData]=useState({
-    //     clientData:[]
-    // })
-    // setProjectData({...projectdata,clientData:})
-
     const [clientData, setClientApi] = useState([]);
     let [clientSelected, setClientSelectedData] = useState();
     const [projectName, setProjectName] = useState('');
@@ -85,19 +80,8 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
     }
 
     const createProject = () => {
-        update(false);
-        if(clientSelected)
-        {
-            clientSelected=clientSelected.clientId;
-            setClientSelectedData(clientSelected);
-        }
-        if(projectType)
-        {
-            projectType=projectType.value;
-            setProjectType(projectType);
-        }
-
-        if (projectLead && projectLocation && projectName && clientSelected && projectType) {
+        update(false);    
+    if (projectLead && projectLocation && projectName && clientSelected && projectType) {
             setAddProjectValidation(false);
         }
         else {
@@ -105,12 +89,12 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
             return;
         }
         const data = [{
-            "clientId": clientSelected,
+            "clientId": clientSelected?.clientId,
             "projectId":rowUpdate ? rowUpdate?.projectId : '',
             "projectLead": projectLead,
             "projectLocation": projectLocation,
             "projectName": projectName,
-            "projectType": projectType
+            "projectType": projectType?.value
         }];
         fetch(projectUrl, {
             method: 'POST',
@@ -120,11 +104,11 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
             body: JSON.stringify(data)
         })
             .then((resp) => console.log(resp));
+            update(true);
         setProjectLead('');
         setProjectLocation('');
         setProjectName();
         handleClose();
-        update(true);
     }
 
     return (
@@ -135,7 +119,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description">
                 <DialogTitle id="alert-dialog-title">
-                    {disableBtn ? "View Project Details" : rowUpdate? "Edit Project Details":"Enter The New Project's Details"}
+                    {disableBtn ? "View Project" : rowUpdate? "Edit Project":"Add Project"}
                 </DialogTitle>
                 <Container maxwidth="sm">
                     <Row>
@@ -146,7 +130,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                 disabled={disableBtn}
                                 options={clientData}
                                 value={clientSelected || null}
-                                getOptionLabel={(option) => [option.clientName,option.clientLocation].join(' ')}
+                                getOptionLabel={(option) => [option?.clientName,option.clientLocation].join(' ')}
                                 onChange={(event, newValue) => {
                                     if (newValue) {
                                         setClientSelectedData(newValue);
@@ -163,6 +147,10 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                             disabled={disableBtn}
                                             autoComplete="off"
                                             label="Client"
+                                            // onChange={(event) => {
+                                            //         setClientSelectedData({...clientSelected,clientName:event.target.value})
+                                                
+                                            // }}
                                             error={(!clientSelected && addProjectValidation) ? true : false}
                                             variant="outlined"
 
@@ -218,8 +206,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                             label="Select Project Type"
                                             variant="outlined"
                                             error={(!projectType && addProjectValidation) ? true : false}
-                                            onChange={(e) => { 
-                                                setProjectType('') }}
+                                            
                                         />
                                 }
                             />
@@ -228,7 +215,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
 
                 </Container>
                 <DialogActions>
-                   {disableBtn ? '':<Button variant="contained" color="success" onClick={createProject}>{rowUpdate ? 'Edit':'Create project'}</Button>}
+                   {disableBtn ? '':<Button variant="contained" color="success" onClick={createProject}>{rowUpdate ? 'Edit':'Add'}</Button>}
                     <Button variant="outlined" onClick={handleClose}>close</Button>
                 </DialogActions>
             </Dialog>
