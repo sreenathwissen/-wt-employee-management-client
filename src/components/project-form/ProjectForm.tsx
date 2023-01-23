@@ -16,19 +16,38 @@ import {
 } from '@mui/material';
 import { Row, Col, Container } from "react-bootstrap";
 import { useEffect } from "react";
+import { ToastContainer, toast } from 'react-toastify';
 
-const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
-    const [clientData, setClientApi] = useState([]);
-    let [clientSelected, setClientSelectedData] = useState();
-    const [projectName, setProjectName] = useState('');
-    const [projectLocation, setProjectLocation] = useState('');
-    const [projectLead, setProjectLead] = useState(false);
-    let [projectType, setProjectType] = useState();
-    const [addProjectValidation, setAddProjectValidation] = useState(false);
+interface ProjectTypes{
+    open:boolean,
+    handleClose:any,
+    update:any,
+    rowUpdate:any,
+    disableBtn:boolean
+}
+type ProjectType={ id:number,value:string}[];
+
+interface ClientSelected{
+    // {clientId:'',clientName:'',clientLocation:''}
+    clientId:string,
+    clientName:string,
+    clientLocation:string
+}
+
+
+
+const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn} : ProjectTypes) => {
+    const [clientData, setClientApi] = useState<any>([]);
+    let [clientSelected, setClientSelectedData] = useState<any>();
+    const [projectName, setProjectName] = useState<any>();
+    const [projectLocation, setProjectLocation] = useState<any>('');
+    const [projectLead, setProjectLead] = useState<any>(false);
+    let [projectType, setProjectType] = useState<any>();
+    const [addProjectValidation, setAddProjectValidation] = useState<any>(false);
     const url = "/api/client/allClients";
     const projectUrl = "/api/project";
 
-    const projectTypes = [
+    const projectTypes:ProjectType = [
         {
             id: 1, value: 'TFR',
         },
@@ -44,7 +63,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
         getAllClients();
         if(rowUpdate)
         {
-            let ptype=projectTypes.find(res=>
+            let ptype =projectTypes.find((res:any)=>
                 {
                     if(rowUpdate?.projectType=='T&M'){
                         rowUpdate.projectType='TNM';
@@ -59,14 +78,14 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
             setProjectName(rowUpdate.projectName);
             setProjectLocation(rowUpdate.projectLocation);
             setProjectLead(rowUpdate.projectLead);
-            setProjectType(ptype);
+            setProjectType(ptype as any);
         }
         else{
-            setClientSelectedData({clientId:'',clientName:'',clientLocation:''})
+            setClientSelectedData({clientId:'',clientName:'',clientLocation:''} as any)
             setProjectName('');
             setProjectLocation('');
-            setProjectLead('');
-            setProjectType({id:'',value:''});
+            setProjectLead('' as any);
+            setProjectType({id:'',value:''} as any);
         }
     },[rowUpdate])
 
@@ -89,7 +108,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
             return;
         }
         const data = [{
-            "clientId": clientSelected?.clientId,
+            "clientId": (clientSelected?.clientId),
             "projectId":rowUpdate ? rowUpdate?.projectId : '',
             "projectLead": projectLead,
             "projectLocation": projectLocation,
@@ -103,12 +122,24 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
             },
             body: JSON.stringify(data)
         })
-            .then((resp) => console.log(resp));
+        .then((resp)=>{
             update(true);
+            if(resp.status >= 400)
+            {
+                let data = resp.json();
+                data.then(result=>{
+                    let errorMessage = result[0]['errorMessage'];
+                    toast(errorMessage);
+                })
+            }
+        })  
         setProjectLead('');
         setProjectLocation('');
-        setProjectName();
+        setProjectName(null);
         handleClose();
+    }
+    const keyDown=(e:any)=> {
+        e.preventDefault();
     }
 
     return (
@@ -121,7 +152,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                 <DialogTitle id="alert-dialog-title">
                     {disableBtn ? "View Project" : rowUpdate? "Edit Project":"Add Project"}
                 </DialogTitle>
-                <Container maxwidth="sm">
+                <Container>
                     <Row>
                         <Col>
                             <Autocomplete
@@ -133,9 +164,9 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                 getOptionLabel={(option) => [option?.clientName,option.clientLocation].join(' ')}
                                 onChange={(event, newValue) => {
                                     if (newValue) {
-                                        setClientSelectedData(newValue);
+                                        setClientSelectedData(newValue as any);
                                     } else {
-                                        setClientSelectedData(null);
+                                        setClientSelectedData(null as any);
                                     }
                                 }}
                                 renderInput={
@@ -144,13 +175,10 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                             {...params}
                                             autoFocus
                                             id="name"
+                                            onKeyDown={keyDown}
                                             disabled={disableBtn}
                                             autoComplete="off"
                                             label="Client"
-                                            // onChange={(event) => {
-                                            //         setClientSelectedData({...clientSelected,clientName:event.target.value})
-                                                
-                                            // }}
                                             error={(!clientSelected && addProjectValidation) ? true : false}
                                             variant="outlined"
 
@@ -201,7 +229,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                                             autoFocus
                                             autoComplete="off"
                                             disabled={disableBtn}
-                                            style={{pointerEvents:'none'}}
+                                            onKeyDown={keyDown}
                                             id="type"
                                             label="Select Project Type"
                                             variant="outlined"
@@ -219,6 +247,7 @@ const ProjectForm = ({ open, handleClose, update,rowUpdate,disableBtn}) => {
                     <Button variant="outlined" onClick={handleClose}>close</Button>
                 </DialogActions>
             </Dialog>
+            <ToastContainer/>
         </React.Fragment>
     );
 };

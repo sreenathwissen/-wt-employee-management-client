@@ -10,26 +10,37 @@ import {Edit} from '@mui/icons-material';
 import {Box,IconButton,Tooltip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
+
+const types = "project | projectlinkage | edit | view" 
+
+enum ProjectValues {
+  project='project',
+  projectlinkage='projectlinkage',
+  edit='edit',
+  view='view'
+}
+
+
 const ProjectGrid = () => {
-  const [tableData, setTableData] = useState([]);
-  const [getrow,selectedRow]=useState(null);
+  const [tableData, setTableData] = useState<any>([]);
+  const [getrow,selectedRow]=useState<any>(null);
   const url = "http://localhost:4000/projects";
   const allProjectsUrl = "/api/project/allProjects"
-  const [projectForm, setProjectForm] = useState(false);
-  const [projectLinkajeForm, setProjectLinkajeForm] = useState(false);
-  const [submitBtnDisable,setSubmitBtnDisable] = useState(false);
-  const [update,getUpdate] = useState(false);
+  const [projectForm, setProjectForm] = useState<any>(false);
+  const [projectLinkajeForm, setProjectLinkajeForm] = useState<any>(false);
+  const [submitBtnDisable,setSubmitBtnDisable] = useState<any>(false);
+  const [update,getUpdate] = useState<any>(false);
 
-  const handleClickOpen = (type,row) => {
-    if (type === "project") {
-      selectedRow();
+  const handleClickOpen = (type:any,row:any) => {
+    if (type === ProjectValues.project) {
+      selectedRow(null);
       setProjectForm(true);
       setSubmitBtnDisable(false);
-    } else if (type === "projectlinkage") {
+    } else if (type === ProjectValues.projectlinkage) {
       setProjectLinkajeForm(true);
       setSubmitBtnDisable(false);
     }
-    else if(type=='edit' && row)
+    else if(type==ProjectValues.edit && row)
     {
       selectedRow(row['original']);
       setProjectForm(true);
@@ -43,14 +54,14 @@ const ProjectGrid = () => {
     }
   };
 
-  const handleClose = (type) => {
-    if (type === "project") {
+  const handleClose = (type:any) => {
+    if (type === ProjectValues.project) {
       setProjectForm(false);
-    } else if (type === "projectlinkage") {
+    } else if (type === ProjectValues.projectlinkage) {
       setProjectLinkajeForm(false);
     }
-    else if (type === "edit") {
-      selectedRow();
+    else if (type === ProjectValues.edit) {
+      selectedRow(null);
       setProjectForm(false);
     }
   };
@@ -62,7 +73,7 @@ const ProjectGrid = () => {
   const getUser = () => {
     fetch(allProjectsUrl)
       .then((resp) => resp.json())
-      .then((resp) => setTableData(resp.map((result,index)=>
+      .then((resp) => setTableData(resp.map((result:any,index:any)=>
       {
         result['serialNumber']=index+1;
         return result;
@@ -102,12 +113,12 @@ const ProjectGrid = () => {
 
   return (
     <>
-      <Grid sx={{ m: 0, p: 2 }} align="right">
+      <Grid component={Grid as any} sx={{ m: 0, p: 2 }} align="right">
         <Button
           className="btn-add"
           variant="contained"
           color="success"
-          onClick={() => handleClickOpen("project")}
+          onClick={() => handleClickOpen(ProjectValues.project,null)}
         >
           <AddCircleOutlineIcon /> &nbsp; create new project
         </Button>
@@ -116,7 +127,7 @@ const ProjectGrid = () => {
           className="btn-add"
           variant="contained"
           color="success"
-          onClick={() => handleClickOpen("projectlinkage")}
+          onClick={() => handleClickOpen(ProjectValues.projectlinkage,null)}
         >
           <AssignmentOutlinedIcon />
           &nbsp; Asign Project
@@ -136,12 +147,12 @@ const ProjectGrid = () => {
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex',  gap: '0.5rem' }}>
             <Tooltip arrow placement="left" title="Edit">
-              <IconButton onClick={() => handleClickOpen("edit",row)}>
+              <IconButton onClick={() => handleClickOpen(ProjectValues.edit,row)}>
                 <Edit/>
               </IconButton>
             </Tooltip>
             <Tooltip arrow placement="right" title="View">
-              <IconButton color="success" onClick={() => handleClickOpen("view",row)}>
+              <IconButton color="success" onClick={() => handleClickOpen(ProjectValues.view,row)}>
                 <VisibilityIcon />
               </IconButton>
             </Tooltip>
@@ -149,14 +160,14 @@ const ProjectGrid = () => {
         )}/>
       <ProjectForm
         open={projectForm}
-        handleClose={() => handleClose("project")}
+        handleClose={() => handleClose(ProjectValues.project)}
         update={getUpdate}
         rowUpdate={getrow}
         disableBtn={submitBtnDisable}
       />
       <ProjectLinkageForm
         open={projectLinkajeForm}
-        handleClose={() => handleClose("projectlinkage")}
+        handleClose={() => handleClose(ProjectValues.projectlinkage)}
       />
     </>
   );

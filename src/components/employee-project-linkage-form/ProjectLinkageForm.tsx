@@ -12,7 +12,12 @@ import {
     FormHelperText
 } from '@mui/material';
 
-const ProjectLinkageForm = ({ open, handleClose }) => {
+interface projectTypes{
+    open:boolean,
+    handleClose:any
+}
+
+const ProjectLinkageForm = ({ open, handleClose } : projectTypes) => {
 
     return (
         <div>

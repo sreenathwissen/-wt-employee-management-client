@@ -15,6 +15,7 @@ import { Autocomplete, debounce } from "@mui/material";
 import { Edit } from "@mui/icons-material";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { ToastContainer, toast } from 'react-toastify';
 
 const SkillGrid = () => {
   const [skilldata, setSkillData] = useState({
@@ -99,7 +100,7 @@ const SkillGrid = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let isPresent = false;
+    // let isPresent = false;
     if (
       Object.keys(skilldata.inputskill).length > 0
         ? skilldata.inputskill?.skillName
@@ -114,16 +115,6 @@ const SkillGrid = () => {
       Object.keys(skilldata.inputskill).length > 0
         ? skilldata.inputskill?.skillName
         : skilldata?.inputskill;
-    skilldata.tableData.map((skill) => {
-      if (skill?.skillName?.toLowerCase() === skillname.toLowerCase()) {
-        isPresent = true;
-        return;
-      }
-    });
-    if (isPresent) {
-      alert("Skill Already Present!!!");
-      return;
-    }
     let data = [
       { skillId: skilldata?.inputskill?.skillId, skillName: skillname.trim() },
     ];
@@ -133,10 +124,19 @@ const SkillGrid = () => {
       headers: {
         "content-type": "application/json",
       },
-    }).then((res) => {
+    })
+    .then((resp)=>{
       handleClose();
-      getSkills();
-    });
+        getSkills();
+      if(resp.status >= 400)
+      {
+          let data = resp.json();
+          data.then(result=>{
+              let errorMessage = result[0]['errorMessage'];
+              toast(errorMessage);
+          })
+      }
+  })   
   };
 
   useEffect(() => {
@@ -295,6 +295,7 @@ const SkillGrid = () => {
           </Box>
         )}
       />
+      <ToastContainer/>
     </>
   );
 };

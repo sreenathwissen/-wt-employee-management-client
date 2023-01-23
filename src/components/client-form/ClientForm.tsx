@@ -10,28 +10,58 @@ import {
     Autocomplete
 } from '@mui/material';
 import { Row, Col, Container } from "react-bootstrap";
+import { ToastContainer, toast } from 'react-toastify';
 
-const ClientForm = ({ open, handleClose,update,rowUpdate,disableBtn}) => {
-    const [clientName, setClientName] = useState('');
-    const [clientLocation, setClientLocation] = useState('');
-    const [addClientValidation, setAddClientValidation] = useState(false);
-    const [clientSearch, setClientSearch] = useState([]);
+  import 'react-toastify/dist/ReactToastify.css';
+
+  type props = {
+    open:boolean,
+    handleClose:any,
+    update:any,
+    rowUpdate:any,
+    disableBtn:boolean
+  }
+
+  interface Name{
+    clientName:string,
+    setClientName?:Function;
+  }
+  interface Location{
+    clientLocation:string,
+    setClientLocation?:Function
+  }
+
+interface Validate{
+    addClientValidation?:boolean,
+    setAddClientValidation?:any;
+}
+
+interface Search{
+    clientSearch:any[],
+    setClientSearch?:Function
+}
+
+const ClientForm = ({ open, handleClose,update,rowUpdate,disableBtn} : props) => {
+    const [clientName, setClientName] = useState<Name>({clientName:''});
+    const [clientLocation, setClientLocation] = useState<Location>({clientLocation:''});
+    const [addClientValidation, setAddClientValidation] = useState<Validate>({addClientValidation:false});
+    const [clientSearch, setClientSearch] = useState<Search>({clientSearch:[]});
     const url = "/api/client";
 
     useEffect(() => {
-        if (clientName.length >= 3 && clientLocation.length >= 3)
-            setAddClientValidation(true);
+        if (clientName && clientName.clientName.length >= 3 && clientLocation && clientLocation.clientLocation.length >= 3)
+            setAddClientValidation({addClientValidation:true});
         else
-            setAddClientValidation(false);
+        setAddClientValidation({addClientValidation:false});
 
-        if (clientSearch[0]?.clientName === clientName) {
+        if (clientSearch.clientSearch[0] === clientName.clientName) {
             let flag = false;
-            clientSearch.forEach((client) => {
+            clientSearch.clientSearch.forEach((client) => {
                 if (client.clientLocation === clientLocation) {
                     flag = true;
                 }
             });
-            setAddClientValidation(!flag);
+            setAddClientValidation({addClientValidation:!flag});
         }
     }, [clientLocation, clientName]);
 
@@ -51,13 +81,12 @@ useEffect(()=>{
 },[rowUpdate])
 
     const saveClient = () => {
-
         if(clientLocation && clientName)
         {
-            setAddClientValidation(false);
+            setAddClientValidation({addClientValidation:false});
         }
         else{
-            setAddClientValidation(true);
+            setAddClientValidation({addClientValidation:true});
             return;
         }
         update(false);
@@ -73,16 +102,25 @@ useEffect(()=>{
             },
             body: JSON.stringify(data)
         })
-            .then((resp) => console.log(resp));
-        setClientLocation('');
-        setClientName('');
+        .then((resp)=>{
+            update(true);
+            if(resp.status >= 400)
+            {
+                let data = resp.json();
+                data.then(result=>{
+                    let errorMessage = result[0]['errorMessage'];
+                    toast(errorMessage);
+                })
+            }
+        })   
+        setClientLocation({clientLocation:''});
+        setClientName({clientName:''});
         handleClose();
-        update(true);
     };
 
     const onClose = () => {
-        setClientLocation('');
-        setClientName('');
+        setClientLocation({clientLocation:''});
+        setClientName({clientName:''});
         handleClose();
     };
 
@@ -97,7 +135,7 @@ useEffect(()=>{
                 {disableBtn ? "View Client" : rowUpdate? "Edit Client":"Add Client"}
                 </DialogTitle>
                 <DialogContent>
-                    <Container maxWidth="sm">
+                    <Container>
                         <Row>
                             <Col>
                                 <Autocomplete
@@ -106,10 +144,10 @@ useEffect(()=>{
                                     fullWidth
                                     disabled={disableBtn}
                                     value={clientName}
-                                    options={clientSearch.map((option) => option.clientName)}
+                                    options={clientSearch.clientSearch.map((option) => option.clientName)}
                                     onChange={(event, newValue) => {
                                         if (typeof newValue === 'string') {
-                                            setClientName(newValue);
+                                            setClientName({clientName:newValue});
                                         } else if (newValue && newValue.inputValue) {
                                             setClientName(newValue.inputValue);
                                         } else {
@@ -129,7 +167,7 @@ useEffect(()=>{
                                                 label="Name"
                                                 variant="outlined"
                                                 value={clientName}
-                                                onChange={(e) => { setClientName(e.target.value) }}
+                                                onChange={(e) => { setClientName({clientName:e.target.value}) }}
                                             />
                                     }
                                 />
@@ -147,7 +185,7 @@ useEffect(()=>{
                                     variant="outlined"
                                     error={(!clientLocation && addClientValidation) ? true : false}
                                     value={clientLocation}
-                                    onChange={(e) => { setClientLocation(e.target.value) }}
+                                    onChange={(e) => { setClientLocation({clientLocation:e.target.value}) }}
                                 />
                             </Col>
                         </Row>
@@ -158,6 +196,7 @@ useEffect(()=>{
                     <Button variant="outlined" onClick={onClose}>close</Button>
                 </DialogActions>
             </Dialog>
+            <ToastContainer />
         </React.Fragment>
     );
 };

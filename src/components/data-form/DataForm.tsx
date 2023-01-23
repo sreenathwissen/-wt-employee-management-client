@@ -7,7 +7,24 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { TextField } from "@mui/material";
 import StepperForm from "../stepper-form/StepperForm";
 import CloseIcon from "@mui/icons-material/Close";
-const DataForm = ({ open, handleClose, data, onChange, handleFormSubmit }) => {
+
+
+interface userData{
+  firstName:string,
+  lastName:string,
+  email:string
+}
+
+interface DataTypes{
+  open:boolean,
+  handleClose:any,
+  data:userData,
+  onChange?:any,
+  handleFormSubmit?:any
+}
+
+
+const DataForm = ({ open, handleClose, data} : DataTypes) => {
   const { firstName, lastName, email } = data;
 
   return (
@@ -31,16 +48,6 @@ const DataForm = ({ open, handleClose, data, onChange, handleFormSubmit }) => {
           <StepperForm />
         </DialogContent>
         <DialogActions>
-          {/* <Button color="secondary" onClick={handleClose} variant="outlined">
-            close
-          </Button>
-          <Button
-            onClick={() => handleFormSubmit()}
-            color="primary"
-            variant="contained"
-          >
-            submit
-          </Button> */}
         </DialogActions>
       </Dialog>
     </div>

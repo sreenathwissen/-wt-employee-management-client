@@ -16,19 +16,28 @@ const ClientGrid = () => {
   const [clientForm, setClientForm] = useState(false);
   const [submitBtnDisable,setSubmitBtnDisable] = useState(false);
 
-  const handleClickOpen = (type,row) => {
-    if (type === "client") {
-      selectedRow();
+const types = "client | edit | view"
+
+enum USER {
+  client='client',
+  edit='edit',
+  view='view'
+}
+
+
+  const handleClickOpen = (type:any,row:any) => {
+    if (USER.client) {
+      selectedRow(null);
       setClientForm(true);
       setSubmitBtnDisable(false);
     }
-    else if(type=='edit' && row)
+    else if(USER.edit && row)
     {
       selectedRow(row['original']);
       setClientForm(true);
       setSubmitBtnDisable(false);
     }
-    else if(type=='view')
+    else if(USER.view && row)
     {
       selectedRow(row['original']);
       setClientForm(true);
@@ -36,12 +45,12 @@ const ClientGrid = () => {
     }
   };
 
-  const handleClose = (type) => {
-    if (type === "client") {
+  const handleClose = (type:any) => {
+    if (USER.client) {
       setClientForm(false);
     }
-    else if (type === "edit") {
-      selectedRow();
+    else if (USER.edit) {
+      selectedRow(null);
       setClientForm(false);
     }
     getUser();
@@ -54,14 +63,14 @@ const ClientGrid = () => {
   const getUser = () => {
     fetch('/api/client/allClients')
       .then((resp) => resp.json())
-      .then((resp) => setTableData(resp.map((result,index)=>
+      .then((resp) => setTableData(resp.map((result:any,index:number)=>
       {
         result['serialNumber']=index+1;
         return result;
       })));
   };
 
-  const columns = useMemo(
+  const columns:any = useMemo(
     () => [
       {
         accessorKey: "serialNumber", //access nested data with dot notation
@@ -81,13 +90,13 @@ const ClientGrid = () => {
 
   return (
     <>
-      <Grid sx={{ m: 0, p: 2 }} align="right">
+      <Grid component={Grid as any} sx={{ m: 0, p: 2 }} align="right">
         <Button
           // sx={{ m: 2 }}
           className="btn-add"
           variant="contained"
           color="success"
-          onClick={() => handleClickOpen("client")}
+          onClick={() => handleClickOpen(USER.client ,null)}
         >
           <AddCircleOutlineIcon /> &nbsp; create client
         </Button>
@@ -106,12 +115,12 @@ const ClientGrid = () => {
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
             <Tooltip arrow placement="left" title="Edit">
-              <IconButton onClick={() => handleClickOpen("edit",row)}>
+              <IconButton onClick={() => handleClickOpen(USER.edit,row)}>
                 <Edit/>
               </IconButton>
             </Tooltip>
             <Tooltip arrow placement="right" title="View">
-              <IconButton color="success" onClick={() => handleClickOpen("view",row)}>
+              <IconButton color="success" onClick={() => handleClickOpen(USER.view,row)}>
                 <VisibilityIcon />
               </IconButton>
             </Tooltip>

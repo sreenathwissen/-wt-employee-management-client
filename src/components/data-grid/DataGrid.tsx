@@ -19,7 +19,7 @@ const DataGrid = () => {
   const url = "http://localhost:4000/employees";
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState(initialValue);
-  const onChange = (e) => {
+  const onChange = (e:any) => {
     const { value, id } = e.target;
     setFormData({ ...formData, [id]: value });
   };
@@ -38,7 +38,7 @@ const DataGrid = () => {
     });
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id:any) => {
     fetch(url + `/${id}`, { method: "DELETE" })
       .then((res) => res.json())
       .then((res) => getUser());
@@ -94,7 +94,7 @@ const DataGrid = () => {
 
   return (
     <>
-      <Grid sx={{ m: 0, p: 2 }} align="right">
+      <Grid component={Grid as any} sx={{ m: 0, p: 2 }} align="right">
         <Button
           // sx={{ m: 2 }}
           className="btn-add"
@@ -114,7 +114,7 @@ const DataGrid = () => {
             size: 120,
           },
         }}
-        columns={columns}
+        columns={columns as any}
         initialState={{ density: "compact" }}
         // enableFilters={false}
         enableColumnFilters={false}
