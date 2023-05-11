@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Row, Col, Container } from "react-bootstrap";
 
-const ClientForm = ({ open, handleClose }) => {
+const ClientForm = ({ open, handleClose,update,rowUpdate,disableBtn}) => {
     const [clientName, setClientName] = useState('');
     const [clientLocation, setClientLocation] = useState('');
     const [addClientValidation, setAddClientValidation] = useState(false);
@@ -39,11 +39,30 @@ const ClientForm = ({ open, handleClose }) => {
         fetch('/api/client/search?clientName=' + clientName)
             .then((resp) => resp.json())
             .then((resp) => setClientSearch(resp));
-        console.log(clientSearch[0]?.clientName === clientName);
     }, [clientName]);
 
+useEffect(()=>{
+    if(rowUpdate){
+        setClientName(rowUpdate.clientName);
+        setClientLocation(rowUpdate.clientLocation);
+    }
+   
+
+},[rowUpdate])
+
     const saveClient = () => {
+
+        if(clientLocation && clientName)
+        {
+            setAddClientValidation(false);
+        }
+        else{
+            setAddClientValidation(true);
+            return;
+        }
+        update(false);
         const data = [{
+            "clientId": rowUpdate?rowUpdate.clientId:'',
             "clientLocation": clientLocation,
             "clientName": clientName
         }];
@@ -58,6 +77,7 @@ const ClientForm = ({ open, handleClose }) => {
         setClientLocation('');
         setClientName('');
         handleClose();
+        update(true);
     };
 
     const onClose = () => {
@@ -74,7 +94,7 @@ const ClientForm = ({ open, handleClose }) => {
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description">
                 <DialogTitle id="alert-dialog-title">
-                    {"Enter The Client Details"}
+                {disableBtn ? "View Client Details" : rowUpdate? "Edit Client Details":"Enter The New Client Details"}
                 </DialogTitle>
                 <DialogContent>
                     <Container maxWidth="sm">
@@ -84,6 +104,8 @@ const ClientForm = ({ open, handleClose }) => {
                                     id="free-solo-demo"
                                     freeSolo
                                     fullWidth
+                                    disabled={disableBtn}
+                                    value={clientName}
                                     options={clientSearch.map((option) => option.clientName)}
                                     onChange={(event, newValue) => {
                                         if (typeof newValue === 'string') {
@@ -99,15 +121,13 @@ const ClientForm = ({ open, handleClose }) => {
                                             <TextField
                                                 {...params}
                                                 autoFocus
+                                                disabled={disableBtn}
                                                 margin="dense"
+                                                autoComplete="off"
+                                                error={(!clientName && addClientValidation) ? true : false}
                                                 id="name"
-                                                label="Client Name"
-                                                type="serch"
-                                                fullWidth
-                                                variant="standard"
-                                                error={clientName.length >= 3 ? false : true}
-                                                helperText="Enter Client's Name"
-                                                required={true}
+                                                label="Name"
+                                                variant="outlined"
                                                 value={clientName}
                                                 onChange={(e) => { setClientName(e.target.value) }}
                                             />
@@ -117,15 +137,15 @@ const ClientForm = ({ open, handleClose }) => {
                             <Col>
                                 <TextField
                                     autoFocus
+                                    fullWidth
+                                    disabled={disableBtn}
                                     margin="dense"
                                     id="name"
-                                    label="Client Location"
+                                    label="Location"
+                                    autoComplete="off"
                                     type="text"
-                                    fullWidth
-                                    variant="standard"
-                                    error={clientLocation.length >= 3 ? false : true}
-                                    helperText="Enter Client's Location."
-                                    required={true}
+                                    variant="outlined"
+                                    error={(!clientLocation && addClientValidation) ? true : false}
                                     value={clientLocation}
                                     onChange={(e) => { setClientLocation(e.target.value) }}
                                 />
@@ -134,7 +154,7 @@ const ClientForm = ({ open, handleClose }) => {
                     </Container>
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="contained" color="success" onClick={saveClient} disabled={!addClientValidation}>add client</Button>
+                 {disableBtn ? '':<Button variant="contained" color="success" onClick={saveClient}>{rowUpdate ? 'edit': 'add'}</Button>}
                     <Button variant="outlined" onClick={onClose}>close</Button>
                 </DialogActions>
             </Dialog>
